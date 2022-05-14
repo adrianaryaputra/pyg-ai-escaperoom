@@ -1,5 +1,7 @@
-import math
-import pygame
+import pygame, math
+
+from src.game.map import Map
+from src.game.colorscheme import COLOR
 
 
 
@@ -10,99 +12,92 @@ COLOR_BG = (150, 150, 150)
 
 
 
-class Map(pygame.sprite.Sprite):
-    def __init__(self, screen, map_position, block_dim, block_size):
+class Player(pygame.sprite.Sprite):
+    def __init__(self, parent: pygame.sprite.Sprite, position, size, velocity):
         super().__init__()
-        self.screen = screen
-        self.position = map_position
-        self.blockDim = block_dim
-        self.blockSize = block_size
-        self.size = (block_dim[0]*block_size, block_dim[1]*block_size)
-        
-        # create map surface
-        self.image = pygame.Surface(size=self.size)
-        self.image.fill(COLOR_WALL)
-        self.rect = self.image.get_rect(top=self.position[1], left=self.position[0])
-
-        # create blocks
-        self.blockGroup = pygame.sprite.Group()
-        self.blocks = []
-        self.generateBlocks(block_dim, block_size)
+        self.parent = parent
+        self.image = pygame.Surface(size=(size, size))
+        self.image.fill(COLOR.PLAYER)
+        self.rect = self.image.get_rect(center=position)
+        self.velocity = velocity
+        self.speed = [0,0]
 
 
-    def generateBlocks(self, dim, size):
-        for i in range(dim[0]):
-            for j in range(dim[1]):
-                self.blocks.append(Block(self.screen, (i*size, j*size), (size, size)))
-                self.blockGroup.add(self.blocks[-1])
+    def update(self):
+        self.rect.move_ip(self.speed)
+        self.collisionHandler()
 
 
     def draw(self):
-        self.screen.blit(self.image, self.rect)
-        self.blockGroup.draw(self.image)
-
-
-    def update(self):
-        self.blockGroup.update()
+        self.parent.image.blit(self.image, self.rect)
 
 
     def handleEvent(self, event):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
-                mousePos = pygame.mouse.get_pos()
-                clickedBlock = self.getBlockByPosition(mousePos)
-                clickedBlock.onMouseDown()
+        if event.type == pygame.KEYDOWN:
+            self.onKeyDown(event.key)
+        if event.type == pygame.KEYUP:
+            self.onKeyUp(event.key)
 
 
-    def getBlockByPosition(self, position):
-        relativePos = (position[0] - self.rect.left, position[1] - self.rect.top)
-        x = math.floor(relativePos[0] / self.blockSize)
-        y = math.floor(relativePos[1] / self.blockSize)
-        return self.blocks[y + x*self.blockDim[1]]
+    def onKeyDown(self, key):
+        if key == pygame.K_LEFT:
+            self.speed[0] = -self.velocity
+        if key == pygame.K_RIGHT:
+            self.speed[0] = self.velocity
+        if key == pygame.K_UP:
+            self.speed[1] = -self.velocity
+        if key == pygame.K_DOWN:
+            self.speed[1] = self.velocity
+        
+        # diagonal speed adjustment
+        if self.speed[0] != 0 and self.speed[1] != 0:
+            self.speed[0] *= 0.7
+            self.speed[1] *= 0.7
+
+    
+    def onKeyUp(self, key):
+        if key == pygame.K_LEFT:
+            self.speed[0] = 0
+            self.speed[1] = round(self.speed[1]/0.7)
+        if key == pygame.K_RIGHT:
+            self.speed[0] = 0
+            self.speed[1] = round(self.speed[1]/0.7)
+        if key == pygame.K_UP:
+            self.speed[1] = 0
+            self.speed[0] = round(self.speed[0]/0.7)
+        if key == pygame.K_DOWN:
+            self.speed[1] = 0
+            self.speed[0] = round(self.speed[0]/0.7)
 
 
+    def collisionHandler(self):
+        # transform parent rect to relative coordinate
+        rect = self.parent.rect.copy()
+        rect.move_ip(-self.parent.rect.left, -self.parent.rect.top)
 
-class Block(pygame.sprite.Sprite):
-    def __init__(self, parent: pygame.Surface, position, size):
-        super().__init__()
-        self.parent = parent
-        self.image = pygame.Surface(size=size)
-        self.image.fill(COLOR_BG)
-        self.rect = self.image.get_rect(top=position[1], left=position[0])
+        # peg player inside map surface
+        self.rect.clamp_ip(rect)
 
-        self.foreground = pygame.Surface(size=(size[0]-2, size[1]-2))
-        self.foreground.fill(COLOR_FLOOR)
-        self.foreground_rect = self.foreground.get_rect(top=1, left=1)
-        self.image.blit(self.foreground, self.foreground_rect)
+        # check collision with all blocks
+        collidableBlock = [block for block in self.parent.blocks if block.collidable]
+        collisionListID = self.rect.collidelistall(collidableBlock)
+        collisionList = [collidableBlock[i] for i in collisionListID]
+        collisionClip = [self.rect.clip(coll) for coll in collisionList]
 
-        self.blockTypes = {
-            "floor": (COLOR_FLOOR, False),
-            "wall": (COLOR_WALL, True),
-            "finish": (COLOR_FINISH, False),
-        }
-        self.blockType = "floor"
-        self.configureType()
+        for block in zip(collisionList, collisionClip):
+            print(block)
+            if block[0].rect.x == block[1].x and block[1].width < block[1].height:
+                self.rect.right = block[0].rect.left
+            elif block[0].rect.y == block[1].y and block[1].width > block[1].height:
+                self.rect.bottom = block[0].rect.top
+            elif block[1].width > block[1].height:
+                self.rect.top = block[0].rect.bottom
+            elif block[1].width < block[1].height:
+                self.rect.left = block[0].rect.right
 
-
-    def configureType(self):
-        self.foreground.fill(self.blockTypes[self.blockType][0])
-        self.image.blit(self.foreground, self.foreground_rect)
-        self.collideable = self.blockTypes[self.blockType][1]
-
-
-    def update(self):
-        pass
-
-
-    def onMouseDown(self):
-        # find index of current block type
-        blockTypeIndex = list(self.blockTypes.keys()).index(self.blockType)
-
-        # find next block type
-        blockTypeIndex += 1
-        blockTypeIndex %= len(self.blockTypes)
-        self.blockType = list(self.blockTypes.keys())[blockTypeIndex]
-        self.configureType()
+        # for block in collisionList:
+        #     overlap = self.rect.clip(block)
+        #     print(overlap)
 
 
 
@@ -115,17 +110,23 @@ def main():
     clock = pygame.time.Clock()
 
     map = Map(screen, (10, 110), (26, 16), 30)
+    player = Player(map, (400, 300), 20, 5)
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+
             map.handleEvent(event)
+            player.handleEvent(event)
 
         screen.fill(COLOR_BG)
 
         map.draw()
         map.update()
+
+        player.draw()
+        player.update()
 
         pygame.display.update()
         clock.tick(FPS)
