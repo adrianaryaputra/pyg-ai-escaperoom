@@ -14,6 +14,7 @@ class PSOwithDEAP:
     def __init__(self, params):
         self.setup_creator()
         self.setup_toolbox()
+        # test
 
 
     def setup_creator(self):
