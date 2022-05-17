@@ -42,7 +42,7 @@ class Map(pygame.sprite.Sprite):
 
     def handleEvent(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if event.button == 1:
+            if event.button == 1 and self.rect.collidepoint(event.pos):
                 mousePos = pygame.mouse.get_pos()
                 clickedBlock = self.getBlockByPosition(mousePos)
                 clickedBlock.onMouseDown()
@@ -53,6 +53,18 @@ class Map(pygame.sprite.Sprite):
         x = math.floor(relativePos[0] / self.blockSize)
         y = math.floor(relativePos[1] / self.blockSize)
         return self.blocks[y + x*self.blockDim[1]]
+
+
+    def dataSave(self):
+        data = []
+        for block in self.blocks:
+            data.append(block.dataSave())
+        return data
+
+
+    def dataLoad(self, data):
+        for i in range(len(data)):
+            self.blocks[i].dataLoad(data[i])
 
 
 
@@ -94,4 +106,13 @@ class Block(pygame.sprite.Sprite):
         blockTypeIndex += 1
         blockTypeIndex %= len(self.blockTypes)
         self.blockType = list(self.blockTypes.keys())[blockTypeIndex]
+        self.configureType()
+
+
+    def dataSave(self):
+        return self.blockType
+
+
+    def dataLoad(self, data):
+        self.blockType = data
         self.configureType()

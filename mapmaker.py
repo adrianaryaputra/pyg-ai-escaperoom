@@ -1,103 +1,46 @@
-import pygame, math
+import pygame, easygui, pickle
 
 from src.game.map import Map
+from src.game.player import Player
+from src.game.obstacle import BouncingObstacle
+from src.game.button import Button
 from src.game.colorscheme import COLOR
 
 
 
-COLOR_WALL = (0, 0, 0)
-COLOR_FLOOR = (180, 180, 180)
-COLOR_FINISH = (80, 180, 80)
-COLOR_BG = (150, 150, 150)
-
-
-
-class Player(pygame.sprite.Sprite):
-    def __init__(self, parent: pygame.sprite.Sprite, position, size, velocity):
-        super().__init__()
-        self.parent = parent
-        self.image = pygame.Surface(size=(size, size))
-        self.image.fill(COLOR.PLAYER)
-        self.rect = self.image.get_rect(center=position)
-        self.velocity = velocity
-        self.speed = [0,0]
-
-
-    def update(self):
-        self.rect.move_ip(self.speed)
-        self.collisionHandler()
-
-
-    def draw(self):
-        self.parent.image.blit(self.image, self.rect)
-
-
-    def handleEvent(self, event):
-        if event.type == pygame.KEYDOWN:
-            self.onKeyDown(event.key)
-        if event.type == pygame.KEYUP:
-            self.onKeyUp(event.key)
-
-
-    def onKeyDown(self, key):
-        if key == pygame.K_LEFT:
-            self.speed[0] = -self.velocity
-        if key == pygame.K_RIGHT:
-            self.speed[0] = self.velocity
-        if key == pygame.K_UP:
-            self.speed[1] = -self.velocity
-        if key == pygame.K_DOWN:
-            self.speed[1] = self.velocity
+class Level:
+    def __init__(self, screen):
+        self.screen = screen
         
-        # diagonal speed adjustment
-        if self.speed[0] != 0 and self.speed[1] != 0:
-            self.speed[0] *= 0.7
-            self.speed[1] *= 0.7
-
-    
-    def onKeyUp(self, key):
-        if key == pygame.K_LEFT:
-            self.speed[0] = 0
-            self.speed[1] = round(self.speed[1]/0.7)
-        if key == pygame.K_RIGHT:
-            self.speed[0] = 0
-            self.speed[1] = round(self.speed[1]/0.7)
-        if key == pygame.K_UP:
-            self.speed[1] = 0
-            self.speed[0] = round(self.speed[0]/0.7)
-        if key == pygame.K_DOWN:
-            self.speed[1] = 0
-            self.speed[0] = round(self.speed[0]/0.7)
+        self.map = Map(screen, (10, 110), (26, 16), 30)
+        self.player = Player(self.map, (400, 300), 20, 5) 
+        self.obstacles = pygame.sprite.Group()
 
 
-    def collisionHandler(self):
-        # transform parent rect to relative coordinate
-        rect = self.parent.rect.copy()
-        rect.move_ip(-self.parent.rect.left, -self.parent.rect.top)
+    def dataSave(self):
+        # use easygui to get save filepath
+        path = easygui.filesavebox(msg="Escape Room", title="Save your hard worked level", default="levelX_Y.map", filetypes=["*.map"])
+        save = {
+            "map": self.map.dataSave(),
+            "player": self.player.dataSave(),
+            "obstacles": [obstacle.dataSave() for obstacle in self.obstacles]
+        }
+        with open (path, "wb") as file:
+            pickle.dump(save, file)
+            
 
-        # peg player inside map surface
-        self.rect.clamp_ip(rect)
 
-        # check collision with all blocks
-        collidableBlock = [block for block in self.parent.blocks if block.collidable]
-        collisionListID = self.rect.collidelistall(collidableBlock)
-        collisionList = [collidableBlock[i] for i in collisionListID]
-        collisionClip = [self.rect.clip(coll) for coll in collisionList]
+    def dataLoad(self):
+        # use easygui to get filepath
+        path = easygui.fileopenbox(msg="Escape Room", title="Load your hard worked level", default="levelX_Y.map", filetypes=["*.map"])
+        with open (path, "rb") as file:
+            save = pickle.load(file)
+        self.map.dataLoad(save["map"])
+        self.player.dataLoad(save["player"])
+        for obstacle in save["obstacles"]:
+            self.obstacles.add(BouncingObstacle(self.map, obstacle["position"], obstacle["size"], obstacle["speed"]))
+        
 
-        for block in zip(collisionList, collisionClip):
-            print(block)
-            if block[0].rect.x == block[1].x and block[1].width < block[1].height:
-                self.rect.right = block[0].rect.left
-            elif block[0].rect.y == block[1].y and block[1].width > block[1].height:
-                self.rect.bottom = block[0].rect.top
-            elif block[1].width > block[1].height:
-                self.rect.top = block[0].rect.bottom
-            elif block[1].width < block[1].height:
-                self.rect.left = block[0].rect.right
-
-        # for block in collisionList:
-        #     overlap = self.rect.clip(block)
-        #     print(overlap)
 
 
 
@@ -109,28 +52,42 @@ def main():
     FPS = 60
     clock = pygame.time.Clock()
 
-    map = Map(screen, (10, 110), (26, 16), 30)
-    player = Player(map, (400, 300), 20, 5)
+    level = Level(screen)
+
+    obs = BouncingObstacle(level.map, (300,300), 20, 5, 1)
+    obs.play()
+
+    buttons = pygame.sprite.Group()
+    buttons.add(Button(screen, (10, 10), (150, 40), "Load Map", level.dataLoad))
+    buttons.add(Button(screen, (10, 60), (150, 40), "Save Map", level.dataSave))
 
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
 
-            map.handleEvent(event)
-            player.handleEvent(event)
+            level.map.handleEvent(event)
+            level.player.handleEvent(event)
+            obs.handleEvent(event)
+            for button in buttons:
+                button.handleEvent(event)
 
-        screen.fill(COLOR_BG)
+        screen.fill(COLOR.BG)
 
-        map.draw()
-        map.update()
+        level.map.draw()
+        level.map.update()
 
-        player.draw()
-        player.update()
+        level.player.draw()
+        level.player.update()
+
+        obs.draw()
+        obs.update()
+
+        buttons.draw(screen)
+        buttons.update()
 
         pygame.display.update()
         clock.tick(FPS)
-
 
 
 
