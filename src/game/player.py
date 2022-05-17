@@ -1,8 +1,9 @@
+from xmlrpc.client import Boolean
 import pygame
 
 from .colorscheme import COLOR
 from .object import BasicObject
-
+from .obstacle import BouncingObstacle
 
 
 class Player(BasicObject):
@@ -12,11 +13,18 @@ class Player(BasicObject):
 
 
     def handleEvent(self, event):
-        self.onKeyEvent()
+        if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+            self.onKeyEvent()
         # if event.type == pygame.KEYDOWN:
         #     self.onKeyDown(event.key)
         # if event.type == pygame.KEYUP:
         #     self.onKeyUp(event.key)
+
+    
+    def update(self, obs):
+        super().update()
+        is_collide = self.obstacleCollision(obs)
+        return is_collide
 
 
     def onKeyDown(self, key):
@@ -93,3 +101,9 @@ class Player(BasicObject):
                 self.rect.top = block[0].rect.bottom
             elif block[1].width < block[1].height:
                 self.rect.left = block[0].rect.right
+
+    def obstacleCollision(self, obs:list[BouncingObstacle]) -> Boolean:
+        for ob in obs:
+            if ob.rect.colliderect(self.rect):
+                return(True)
+        return(False)

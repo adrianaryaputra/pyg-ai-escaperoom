@@ -57,9 +57,20 @@ def main():
     obs = BouncingObstacle(level.map, (300,300), 20, 5, 1)
     obs.play()
 
+    obs2 = BouncingObstacle(level.map, (200, 300), 40, 5, 0)
+    obs2.play
+
     buttons = pygame.sprite.Group()
     buttons.add(Button(screen, (10, 10), (150, 40), "Load Map", level.dataLoad))
     buttons.add(Button(screen, (10, 60), (150, 40), "Save Map", level.dataSave))
+
+    # Add Surrounding Wall
+    for i in range(16):
+        level.map.blocks[i].onMouseDown()
+        level.map.blocks[-i-1].onMouseDown()
+    for i in range(1, 25):
+        level.map.blocks[i*16].onMouseDown()
+        level.map.blocks[(i+1)*16-1].onMouseDown()
 
     while True:
         for event in pygame.event.get():
@@ -68,7 +79,7 @@ def main():
 
             level.map.handleEvent(event)
             level.player.handleEvent(event)
-            obs.handleEvent(event)
+            # obs.handleEvent(event)
             for button in buttons:
                 button.handleEvent(event)
 
@@ -78,10 +89,14 @@ def main():
         level.map.update()
 
         level.player.draw()
-        level.player.update()
+        is_collide = level.player.update([obs, obs2])
+        if is_collide:
+            break  # GAME OVER!!!
 
         obs.draw()
         obs.update()
+        obs2.draw()
+        obs2.update()
 
         buttons.draw(screen)
         buttons.update()
