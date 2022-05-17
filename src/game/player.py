@@ -12,10 +12,11 @@ class Player(BasicObject):
 
 
     def handleEvent(self, event):
-        if event.type == pygame.KEYDOWN:
-            self.onKeyDown(event.key)
-        if event.type == pygame.KEYUP:
-            self.onKeyUp(event.key)
+        self.onKeyEvent()
+        # if event.type == pygame.KEYDOWN:
+        #     self.onKeyDown(event.key)
+        # if event.type == pygame.KEYUP:
+        #     self.onKeyUp(event.key)
 
 
     def onKeyDown(self, key):
@@ -34,6 +35,31 @@ class Player(BasicObject):
             self.speed[1] *= 0.7
 
     
+    def onKeyEvent(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT] and keys[pygame.K_LEFT]:
+            self.speed[0] = 0
+        elif keys[pygame.K_LEFT]:
+            self.speed[0] = -self.velocity
+        elif keys[pygame.K_RIGHT]:
+            self.speed[0] = self.velocity
+        else:
+            self.speed[0] = 0
+        if keys[pygame.K_UP] and keys[pygame.K_DOWN]:
+            self.speed[1] = 0
+        elif keys[pygame.K_UP]:
+            self.speed[1] = -self.velocity
+        elif keys[pygame.K_DOWN]:
+            self.speed[1] = self.velocity
+        else:
+            self.speed[1] = 0
+        
+        # diagonal speed adjustment
+        if self.speed[0] != 0 and self.speed[1] != 0:
+            self.speed[0] *= 0.7
+            self.speed[1] *= 0.7
+
+
     def onKeyUp(self, key):
         if key == pygame.K_LEFT:
             self.speed[0] = 0
