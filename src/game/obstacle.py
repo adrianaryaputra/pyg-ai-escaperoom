@@ -86,7 +86,7 @@ class RotatingObstacle(pygame.sprite.Sprite):
         self.base_image = pygame.Surface(size=(9*size, 9*size))
         self.base_rect = self.base_image.get_rect(center=position)
         self.base_image.fill(COLOR.BG)
-        self.base_image.set_colorkey(COLOR.BG)
+        # self.base_image.set_colorkey(COLOR.BG)
         self.image = self.base_image.copy()
         self.rect = self.image.get_rect(center=position)
         self.velocity = velocity
@@ -98,11 +98,26 @@ class RotatingObstacle(pygame.sprite.Sprite):
         self.curDegree = 0
 
         self.subelem = []
+        self.minirectangle = []
+
+        """
+        CCW
+        vx = n*d*cos(speed*2*pi)
+        vy = n*d*sin(speed*2*pi)
+
+        CW
+        vx = n*d*cos(speed*2*pi)
+        vy = n*d*-1*sin(speed*2*pi)
+
+        speed = Period
+        """
+
         for i in range(5):
             si = pygame.Surface(size=(size, size))
             sr = si.get_rect(centerx=self.rect.width/2, top=2*i*size)
             si.fill(COLOR.OBSTACLE)
             self.subelem.append((si, sr))
+            self.minirectangle.append(sr)
 
         for i in range(5):
             si = pygame.Surface(size=(size, size))
@@ -110,6 +125,7 @@ class RotatingObstacle(pygame.sprite.Sprite):
             si.fill(COLOR.OBSTACLE)
             if i != 2:
                 self.subelem.append((si, sr))
+                self.minirectangle.append(sr)
 
         self.base_image.blits(self.subelem)
         self.rotate(0)

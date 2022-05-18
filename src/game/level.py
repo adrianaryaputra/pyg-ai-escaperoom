@@ -9,7 +9,7 @@ from .map import Map
 class Level:
     def __init__(self, screen):
         self.screen = screen
-        
+        self.FLAG_MODE = False
         self.map = Map(screen, (10, 110), (26, 16), 30)
         self.player = Player(self.map, (400, 300), 20, 5) 
         self.obstacles = pygame.sprite.Group()
@@ -66,10 +66,12 @@ class Level:
 
 
     def playObstacles(self):
+        self.FLAG_MODE = True
         for obstacle in self.obstacles:
             obstacle.play()
 
 
     def stopObstacles(self):
+        self.FLAG_MODE = False
         for obstacle in self.obstacles:
             obstacle.stop()
