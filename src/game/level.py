@@ -15,9 +15,14 @@ class Level:
         self.obstacles = pygame.sprite.Group()
 
 
-    def dataSave(self):
+    def dataSave(self, custom_path=None):
         # use easygui to get save filepath
-        path = easygui.filesavebox(msg="Escape Room", title="Save your hard worked level", default="levelX_Y.map", filetypes=["*.map"])
+        if custom_path is None:
+            path = easygui.filesavebox(msg="Escape Room", title="Save your hard worked level", default="levelX_Y.map", filetypes=["*.map"])
+        else:
+            path = custom_path
+        if path is None:
+            return
         save = {
             "map": self.map.dataSave(),
             "player": self.player.dataSave(),
@@ -27,9 +32,14 @@ class Level:
             pickle.dump(save, file)
 
 
-    def dataLoad(self):
+    def dataLoad(self, custom_path):
         # use easygui to get filepath
-        path = easygui.fileopenbox(msg="Escape Room", title="Load your hard worked level", default="levelX_Y.map", filetypes=["*.map"])
+        if custom_path is None:
+            path = easygui.fileopenbox(msg="Escape Room", title="Load your hard worked level", default="levelX_Y.map", filetypes=["*.map"])
+        else:
+            path = custom_path
+        if path is None:
+            return
         with open (path, "rb") as file:
             save = pickle.load(file)
         self.map.dataLoad(save["map"])
