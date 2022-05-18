@@ -1,6 +1,5 @@
 import pygame
 
-from src.game.obstacle import BouncingObstacle, RotatingObstacle
 from src.game.button import Button
 from src.game.colorscheme import COLOR
 from src.game.level import Level
@@ -17,9 +16,6 @@ def main():
 
     level = Level(screen)
 
-    obs2 = RotatingObstacle(level.map, (300,300), 20, 2, 1)
-    obs2.play()
-
     buttons = pygame.sprite.Group()
     buttons.add(Button(screen, (10, 10), (150, 40), "Load Map", level.dataLoad))
     buttons.add(Button(screen, (10, 60), (150, 40), "Save Map", level.dataSave))
@@ -31,6 +27,14 @@ def main():
     buttons.add(Button(screen, (490, 60), (150, 40), "Stop Obstacles", level.stopObstacles))
     buttons.add(Button(screen, (650, 10), (140, 40), "Clear Obs", level.obstacles.empty))
     buttons.add(Button(screen, (650, 60), (140, 40), "Clear Map", level.map.clear))
+
+    # Add Surrounding Wall
+    for i in range(16):
+        level.map.blocks[i].onMouseDown()
+        level.map.blocks[-i-1].onMouseDown()
+    for i in range(1, 25):
+        level.map.blocks[i*16].onMouseDown()
+        level.map.blocks[(i+1)*16-1].onMouseDown()
 
     while True:
         for event in pygame.event.get():
@@ -50,7 +54,6 @@ def main():
         level.map.update()
 
         level.player.draw()
-        level.player.update()
 
         for obstacle in level.obstacles:
             obstacle.draw()
