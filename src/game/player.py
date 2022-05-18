@@ -14,9 +14,11 @@ class Player(BasicObject):
 
     def handleEvent(self, event):
         if event.type == pygame.KEYDOWN:
-            self.onKeyDown(event.key)
+            # self.onKeyDown(event.key)
+            self.onKeyEvent()
         if event.type == pygame.KEYUP:
-            self.onKeyUp(event.key)
+            # self.onKeyUp(event.key)
+            self.onKeyEvent()
 
 
     def AI_injectMovement(self, vx, vy):
@@ -40,6 +42,30 @@ class Player(BasicObject):
             self.onKeyUp(pygame.K_LEFT)
             self.onKeyUp(pygame.K_RIGHT)
         
+
+    def onKeyEvent(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_RIGHT] and keys[pygame.K_LEFT]:
+            self.speed[0] = 0
+        elif keys[pygame.K_LEFT]:
+            self.speed[0] = -self.velocity
+        elif keys[pygame.K_RIGHT]:
+            self.speed[0] = self.velocity
+        else:
+            self.speed[0] = 0
+        if keys[pygame.K_UP] and keys[pygame.K_DOWN]:
+            self.speed[1] = 0
+        elif keys[pygame.K_UP]:
+            self.speed[1] = -self.velocity
+        elif keys[pygame.K_DOWN]:
+            self.speed[1] = self.velocity
+        else:
+            self.speed[1] = 0
+        
+        # diagonal speed adjustment
+        if self.speed[0] != 0 and self.speed[1] != 0:
+            self.speed[0] *= 0.77
+            self.speed[1] *= 0.77
 
 
     def onKeyDown(self, key):
