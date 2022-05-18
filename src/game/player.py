@@ -9,6 +9,7 @@ class Player(BasicObject):
     def __init__(self, parent: pygame.sprite.Sprite, position, size, velocity):
         super().__init__(parent=parent, position=position, size=size, velocity=velocity)
         self.image.fill(COLOR.PLAYER)
+        self.FLAG_alive = True
 
 
     def handleEvent(self, event):
@@ -18,15 +19,27 @@ class Player(BasicObject):
             self.onKeyUp(event.key)
 
 
-    def AI_injectMovement(self, w,a,s,d):
-        if w>0:
+    def AI_injectMovement(self, vx, vy):
+        if vy<-0.2:
+            self.onKeyUp(pygame.K_DOWN)
             self.onKeyDown(pygame.K_UP)
-        if a>0:
-            self.onKeyDown(pygame.K_LEFT)
-        if s>0:
+        elif vy>0.2:
+            self.onKeyUp(pygame.K_UP)
             self.onKeyDown(pygame.K_DOWN)
-        if d>0:
+        else:
+            self.onKeyUp(pygame.K_UP)
+            self.onKeyUp(pygame.K_DOWN)
+
+        if vx<-0.2:
+            self.onKeyUp(pygame.K_RIGHT)
+            self.onKeyDown(pygame.K_LEFT)
+        elif vx>0.2:
+            self.onKeyUp(pygame.K_LEFT)
             self.onKeyDown(pygame.K_RIGHT)
+        else:
+            self.onKeyUp(pygame.K_LEFT)
+            self.onKeyUp(pygame.K_RIGHT)
+        
 
 
     def onKeyDown(self, key):
@@ -58,6 +71,16 @@ class Player(BasicObject):
         if key == pygame.K_DOWN:
             self.speed[1] = 0
             self.speed[0] = round(self.speed[0]/0.7)
+
+
+    def checkCollisions(self, objList):
+        # check collision with all objects
+        collisionListID = self.rect.collidelistall(objList)
+
+        # if collision with object
+        if len(collisionListID) > 0:
+            return True
+        return False
 
 
     def collisionHandler(self):
