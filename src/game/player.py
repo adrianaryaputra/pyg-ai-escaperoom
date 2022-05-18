@@ -18,6 +18,17 @@ class Player(BasicObject):
             self.onKeyUp(event.key)
 
 
+    def AI_injectMovement(self, w,a,s,d):
+        if w>0:
+            self.onKeyDown(pygame.K_UP)
+        if a>0:
+            self.onKeyDown(pygame.K_LEFT)
+        if s>0:
+            self.onKeyDown(pygame.K_DOWN)
+        if d>0:
+            self.onKeyDown(pygame.K_RIGHT)
+
+
     def onKeyDown(self, key):
         if key == pygame.K_LEFT:
             self.speed[0] = -self.velocity

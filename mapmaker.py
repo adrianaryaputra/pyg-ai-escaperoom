@@ -29,12 +29,12 @@ def main():
     buttons.add(Button(screen, (650, 60), (140, 40), "Clear Map", level.map.clear))
 
     # Add Surrounding Wall
-    for i in range(16):
-        level.map.blocks[i].onMouseDown()
-        level.map.blocks[-i-1].onMouseDown()
-    for i in range(1, 25):
-        level.map.blocks[i*16].onMouseDown()
-        level.map.blocks[(i+1)*16-1].onMouseDown()
+    # for i in range(16):
+    #     level.map.blocks[i].onMouseDown()
+    #     level.map.blocks[-i-1].onMouseDown()
+    # for i in range(1, 25):
+    #     level.map.blocks[i*16].onMouseDown()
+    #     level.map.blocks[(i+1)*16-1].onMouseDown()
 
     while True:
         for event in pygame.event.get():
@@ -54,6 +54,7 @@ def main():
         level.map.update()
 
         level.player.draw()
+        level.player.update()
 
         for obstacle in level.obstacles:
             obstacle.draw()
