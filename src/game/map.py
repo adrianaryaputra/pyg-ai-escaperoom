@@ -67,6 +67,11 @@ class Map(pygame.sprite.Sprite):
             self.blocks[i].dataLoad(data[i])
 
 
+    def clear(self):
+        for block in self.blocks:
+            block.dataLoad("floor")
+
+
 
 class Block(pygame.sprite.Sprite):
     def __init__(self, parent: pygame.Surface, position, size):

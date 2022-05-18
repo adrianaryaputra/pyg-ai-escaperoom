@@ -1,46 +1,9 @@
-import pygame, easygui, pickle
+import pygame
 
-from src.game.map import Map
-from src.game.player import Player
-from src.game.obstacle import BouncingObstacle
+from src.game.obstacle import BouncingObstacle, RotatingObstacle
 from src.game.button import Button
 from src.game.colorscheme import COLOR
-
-
-
-class Level:
-    def __init__(self, screen):
-        self.screen = screen
-        
-        self.map = Map(screen, (10, 110), (26, 16), 30)
-        self.player = Player(self.map, (400, 300), 20, 5) 
-        self.obstacles = pygame.sprite.Group()
-
-
-    def dataSave(self):
-        # use easygui to get save filepath
-        path = easygui.filesavebox(msg="Escape Room", title="Save your hard worked level", default="levelX_Y.map", filetypes=["*.map"])
-        save = {
-            "map": self.map.dataSave(),
-            "player": self.player.dataSave(),
-            "obstacles": [obstacle.dataSave() for obstacle in self.obstacles]
-        }
-        with open (path, "wb") as file:
-            pickle.dump(save, file)
-            
-
-
-    def dataLoad(self):
-        # use easygui to get filepath
-        path = easygui.fileopenbox(msg="Escape Room", title="Load your hard worked level", default="levelX_Y.map", filetypes=["*.map"])
-        with open (path, "rb") as file:
-            save = pickle.load(file)
-        self.map.dataLoad(save["map"])
-        self.player.dataLoad(save["player"])
-        for obstacle in save["obstacles"]:
-            self.obstacles.add(BouncingObstacle(self.map, obstacle["position"], obstacle["size"], obstacle["speed"]))
-        
-
+from src.game.level import Level
 
 
 
@@ -54,12 +17,20 @@ def main():
 
     level = Level(screen)
 
-    obs = BouncingObstacle(level.map, (300,300), 20, 5, 1)
-    obs.play()
+    obs2 = RotatingObstacle(level.map, (300,300), 20, 2, 1)
+    obs2.play()
 
     buttons = pygame.sprite.Group()
     buttons.add(Button(screen, (10, 10), (150, 40), "Load Map", level.dataLoad))
     buttons.add(Button(screen, (10, 60), (150, 40), "Save Map", level.dataSave))
+    buttons.add(Button(screen, (170, 10), (150, 40), "Create V-Obs", level.createVObstacle))
+    buttons.add(Button(screen, (170, 60), (150, 40), "Create H-Obs", level.createHObstacle))
+    buttons.add(Button(screen, (330, 10), (150, 40), "Create CW-Obs", level.createCWObstacle))
+    buttons.add(Button(screen, (330, 60), (150, 40), "Create CCW-Obs", level.createCCWObstacle))
+    buttons.add(Button(screen, (490, 10), (150, 40), "Play Obstacles", level.playObstacles))
+    buttons.add(Button(screen, (490, 60), (150, 40), "Stop Obstacles", level.stopObstacles))
+    buttons.add(Button(screen, (650, 10), (140, 40), "Clear Obs", level.obstacles.empty))
+    buttons.add(Button(screen, (650, 60), (140, 40), "Clear Map", level.map.clear))
 
     while True:
         for event in pygame.event.get():
@@ -68,7 +39,8 @@ def main():
 
             level.map.handleEvent(event)
             level.player.handleEvent(event)
-            obs.handleEvent(event)
+            for obstacle in level.obstacles:
+                obstacle.handleEvent(event)
             for button in buttons:
                 button.handleEvent(event)
 
@@ -80,8 +52,9 @@ def main():
         level.player.draw()
         level.player.update()
 
-        obs.draw()
-        obs.update()
+        for obstacle in level.obstacles:
+            obstacle.draw()
+            obstacle.update()
 
         buttons.draw(screen)
         buttons.update()
