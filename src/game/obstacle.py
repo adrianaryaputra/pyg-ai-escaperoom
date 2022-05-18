@@ -27,10 +27,10 @@ class BouncingObstacle(BasicObject):
         for block in zip(collisionList, collisionClip):
             if block[0].rect.x == block[1].x and block[1].width < block[1].height:
                 self.rect.right = block[0].rect.left
-                self.speed = [-self.velocity, 0]
+                self.speed = [-1*self.velocity, 0]
             elif block[0].rect.y == block[1].y and block[1].width > block[1].height:
                 self.rect.bottom = block[0].rect.top
-                self.speed = [0, -self.velocity]
+                self.speed = [0, -1*self.velocity]
             elif block[1].width > block[1].height:
                 self.rect.top = block[0].rect.bottom
                 self.speed = [0, self.velocity]

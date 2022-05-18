@@ -36,16 +36,24 @@ class Level:
         self.player.dataLoad(save["player"])
         for obstacle in save["obstacles"]:
             if obstacle["type"] == "BouncingObstacle":
-                self.obstacles.add(BouncingObstacle(self.map, obstacle["position"], obstacle["size"], obstacle["speed"], obstacle["direction"]))
+                self.obstacles.add(BouncingObstacle(self.map, obstacle["position"], 20, obstacle["velocity"], obstacle["direction"]))
             elif obstacle["type"] == "RotatingObstacle":
-                self.obstacles.add(RotatingObstacle(self.map, obstacle["position"], obstacle["size"], obstacle["speed"], obstacle["direction"]))
+                self.obstacles.add(RotatingObstacle(self.map, obstacle["position"], 20, obstacle["velocity"], obstacle["direction"]))
 
 
-    def createVObstacle(self):
+    def createVUpObstacle(self):
+        self.obstacles.add(BouncingObstacle(self.map, self.player.rect.center, 20, -5, 1))
+
+
+    def createVDownObstacle(self):
         self.obstacles.add(BouncingObstacle(self.map, self.player.rect.center, 20, 5, 1))
 
     
-    def createHObstacle(self):
+    def createHLeftObstacle(self):
+        self.obstacles.add(BouncingObstacle(self.map, self.player.rect.center, 20, -5, 0))
+
+    
+    def createHRightObstacle(self):
         self.obstacles.add(BouncingObstacle(self.map, self.player.rect.center, 20, 5, 0))
 
 
