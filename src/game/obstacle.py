@@ -78,6 +78,10 @@ class BouncingObstacle(BasicObject):
         return ds
 
 
+    def getCollisionRects(self):
+        return [self.rect]
+
+
 
 class RotatingObstacle(pygame.sprite.Sprite):
     def __init__(self, parent: pygame.sprite.Sprite, position, size, velocity, direction):
@@ -187,3 +191,7 @@ class RotatingObstacle(pygame.sprite.Sprite):
     
     def dataLoad(self, data):
         pass
+
+
+    def getCollisionRects(self):
+        return [s[1] for s in self.subelem]

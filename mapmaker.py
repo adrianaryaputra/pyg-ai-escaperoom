@@ -1,6 +1,5 @@
 from itertools import chain
 import pygame
-from src.game.obstacle import BouncingObstacle
 
 from src.game.button import Button
 from src.game.colorscheme import COLOR
@@ -60,13 +59,8 @@ def main():
         level.player.draw()
         level.player.update()
 
-        if level.FLAG_MODE:
-            if level.player.checkCollisions([x.rect for x in level.obstacles if x.__class__ == 'BouncingObstacle']):
-                break
-            list_of_rects = [x.minirectangle for x in level.obstacles if x.__class__ == 'RotatingObstacle']
-            list_of_rects = list(chain.from_iterable(list_of_rects))
-            if level.player.checkCollisions(list_of_rects):
-                break
+        if level.FLAG_isPlaying and level.player.checkCollisions(level.getObstacleCollisionRects()):
+            break
 
 
         for obstacle in level.obstacles:

@@ -9,7 +9,7 @@ from .map import Map
 class Level:
     def __init__(self, screen):
         self.screen = screen
-        self.FLAG_MODE = False
+        self.FLAG_isPlaying = False
         self.map = Map(screen, (10, 110), (26, 16), 30)
         self.player = Player(self.map, (400, 300), 20, 5) 
         self.obstacles = pygame.sprite.Group()
@@ -77,13 +77,20 @@ class Level:
         self.obstacles.add(RotatingObstacle(self.map, self.player.rect.center, 20, 2, 1))
 
 
+    def getObstacleCollisionRects(self):
+        cr = []
+        for obstacle in self.obstacles:
+            cr += obstacle.getCollisionRects()
+        return cr
+
+
     def playObstacles(self):
-        self.FLAG_MODE = True
+        self.FLAG_isPlaying = True
         for obstacle in self.obstacles:
             obstacle.play()
 
 
     def stopObstacles(self):
-        self.FLAG_MODE = False
+        self.FLAG_isPlaying = False
         for obstacle in self.obstacles:
             obstacle.stop()
