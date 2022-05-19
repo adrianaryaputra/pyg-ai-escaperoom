@@ -9,7 +9,9 @@ from .object import BasicObject
 class BouncingObstacle(BasicObject):
     def __init__(self, parent: pygame.sprite.Sprite, position, size, velocity, direction):
         super().__init__(parent, position, size, velocity)
-        self.image.fill(COLOR.OBSTACLE)
+        self.image.fill(COLOR.BG)
+        self.image.set_colorkey(COLOR.BG)
+        pygame.draw.circle(self.image, COLOR.OBSTACLE, (self.rect.width//2, self.rect.height//2), self.rect.width//2)
         self.direction = direction
         self.FLAG_mouse3down = False
         self.FLAG_play = False
