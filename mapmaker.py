@@ -1,4 +1,3 @@
-from itertools import chain
 import pygame
 
 from src.game.button import Button
