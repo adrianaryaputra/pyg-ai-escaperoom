@@ -1,3 +1,4 @@
+import math
 import pygame
 
 from .colorscheme import COLOR
@@ -23,22 +24,19 @@ class BouncingObstacle(BasicObject):
         collisionListID = self.rect.collidelistall(collidableBlock)
         collisionList = [collidableBlock[i] for i in collisionListID]
         collisionClip = [self.rect.clip(coll) for coll in collisionList]
+        
         if len(collisionListID) > 0:
             self.speed = [self.speed[0]*-1, self.speed[1]*-1]
 
         for block in zip(collisionList, collisionClip):
             if block[0].rect.x == block[1].x and block[1].width < block[1].height:
                 self.rect.right = block[0].rect.left
-                # self.speed = [-1*self.velocity, 0]
             elif block[0].rect.y == block[1].y and block[1].width > block[1].height:
                 self.rect.bottom = block[0].rect.top
-                # self.speed = [0, -1*self.velocity]
             elif block[1].width > block[1].height:
                 self.rect.top = block[0].rect.bottom
-                # self.speed = [0, self.velocity]
             elif block[1].width < block[1].height:
                 self.rect.left = block[0].rect.right
-                # self.speed = [self.velocity, 0]
 
 
     def handleEvent(self, event):
@@ -83,12 +81,10 @@ class RotatingObstacle(pygame.sprite.Sprite):
     def __init__(self, parent: pygame.sprite.Sprite, position, size, velocity, direction):
         super().__init__()
         self.parent = parent
-        self.base_image = pygame.Surface(size=(9*size, 9*size))
-        self.base_rect = self.base_image.get_rect(center=position)
-        self.base_image.fill(COLOR.BG)
-        # self.base_image.set_colorkey(COLOR.BG)
-        self.image = self.base_image.copy()
+        self.image = pygame.Surface(size=(9*size, 9*size))
         self.rect = self.image.get_rect(center=position)
+        self.image.fill(COLOR.BG)
+        self.image.set_colorkey(COLOR.BG)
         self.velocity = velocity
         self.direction = direction
 
@@ -98,46 +94,39 @@ class RotatingObstacle(pygame.sprite.Sprite):
         self.curDegree = 0
 
         self.subelem = []
-        self.minirectangle = []
 
-        """
-        CCW
-        vx = n*d*cos(speed*2*pi)
-        vy = n*d*sin(speed*2*pi)
-
-        CW
-        vx = n*d*cos(speed*2*pi)
-        vy = n*d*-1*sin(speed*2*pi)
-
-        speed = Period
-        """
-
-        for i in range(5):
-            si = pygame.Surface(size=(size, size))
-            sr = si.get_rect(centerx=self.rect.width/2, top=2*i*size)
-            si.fill(COLOR.OBSTACLE)
-            self.subelem.append((si, sr))
-            self.minirectangle.append(sr)
-
-        for i in range(5):
-            si = pygame.Surface(size=(size, size))
-            sr = si.get_rect(left=2*i*size, centery=self.rect.height/2)
-            si.fill(COLOR.OBSTACLE)
-            if i != 2:
-                self.subelem.append((si, sr))
-                self.minirectangle.append(sr)
-
-        self.base_image.blits(self.subelem)
-        self.rotate(0)
+        for defaultAngle in [0, 90, 180, 270]:
+            for defaultDistance in [2*size, 4*size]:
+                self.subelem.append(self.createSubElement(size, defaultDistance, defaultAngle))
+        self.subelem.append(self.createSubElement(size, 0, 0))
         self.draw()
+
+
+    def createSubElement(self, size, distance, angle):
+        si = pygame.Surface(size=(size, size))
+        si.fill(COLOR.BG)
+        si.set_colorkey(COLOR.BG)
+        pygame.draw.circle(si, COLOR.OBSTACLE, (size//2, size//2), size//2)
+        sd = self.calculateRelativePosition(distance, angle)
+        sr = si.get_rect(
+            centerx=self.rect.centerx + sd[0], 
+            centery=self.rect.centery + sd[1],
+        )
+        return (si, sr, distance, angle)
+
+
+    def calculateRelativePosition(self, distance, angle):
+        rd = (distance*math.cos(angle*math.pi/180), distance*math.sin(angle*math.pi/180))
+        # print(rd)
+        return rd
 
 
     def rotate(self, degree):
         self.curDegree += degree * self.direction
         self.curDegree %= 360
-        self.image = self.base_image.copy()
-        self.image = pygame.transform.rotate(self.image, self.curDegree)
-        self.rect = self.image.get_rect(center=self.rect.center)
+        for sub in self.subelem:
+            newRelPos = self.calculateRelativePosition(sub[2], sub[3] + self.curDegree)
+            sub[1].center = (self.rect.centerx + newRelPos[0], self.rect.centery + newRelPos[1])
 
 
     def play(self):
@@ -157,7 +146,8 @@ class RotatingObstacle(pygame.sprite.Sprite):
 
 
     def draw(self):
-        self.parent.image.blit(self.image, self.rect)
+        # self.parent.image.blit(self.image, self.rect)
+        self.parent.image.blits([s[:2] for s in self.subelem])
 
 
     def handleEvent(self, event):
