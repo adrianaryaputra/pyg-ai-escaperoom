@@ -32,7 +32,7 @@ class Level:
             pickle.dump(save, file)
 
 
-    def dataLoad(self, custom_path):
+    def dataLoad(self, custom_path=None):
         # use easygui to get filepath
         if custom_path is None:
             path = easygui.fileopenbox(msg="Escape Room", title="Load your hard worked level", default="levelX_Y.map", filetypes=["*.map"])
