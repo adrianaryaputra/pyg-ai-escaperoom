@@ -24,7 +24,7 @@ class BouncingObstacle(BasicObject):
         collisionListID = self.rect.collidelistall(collidableBlock)
         collisionList = [collidableBlock[i] for i in collisionListID]
         collisionClip = [self.rect.clip(coll) for coll in collisionList]
-        
+
         if len(collisionListID) > 0:
             self.speed = [self.speed[0]*-1, self.speed[1]*-1]
 
@@ -84,11 +84,12 @@ class RotatingObstacle(pygame.sprite.Sprite):
         self.image = pygame.Surface(size=(9*size, 9*size))
         self.rect = self.image.get_rect(center=position)
         self.image.fill(COLOR.BG)
-        self.image.set_colorkey(COLOR.BG)
+        # self.image.set_colorkey(COLOR.BG)
         self.velocity = velocity
         self.direction = direction
 
         self.FLAG_play = False
+        self.FLAG_mouse3down = False
 
         self.speed = 0
         self.curDegree = 0
@@ -140,6 +141,7 @@ class RotatingObstacle(pygame.sprite.Sprite):
 
     
     def update(self):
+        self.onMouse3()
         if self.FLAG_play:
             self.rotate(self.speed)
         pass
@@ -151,7 +153,25 @@ class RotatingObstacle(pygame.sprite.Sprite):
 
 
     def handleEvent(self, event):
-        pass
+        # if right mouse click
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+            #  if mouse position is in the obstacle
+            if self.rect.collidepoint(self.getRelativePosition(event.pos)):
+                self.FLAG_mouse3down = True
+        if event.type == pygame.MOUSEBUTTONUP and event.button == 3:
+            self.FLAG_mouse3down = False
+
+
+    def onMouse3(self):
+        if self.FLAG_mouse3down:
+            self.rect.center = self.getRelativePosition(pygame.mouse.get_pos())
+            self.rotate(0)
+
+
+    def getRelativePosition(self, position):
+        rp = (position[0] - self.parent.rect.left, position[1] - self.parent.rect.top)
+        print(self.rect.center, position, rp)
+        return rp
 
 
     def dataSave(self):
