@@ -44,6 +44,8 @@ class Level:
             save = pickle.load(file)
         self.map.dataLoad(save["map"])
         self.player.dataLoad(save["player"])
+        # purge obstacle before re-adding
+        self.obstacles.empty()
         for obstacle in save["obstacles"]:
             if obstacle["type"] == "BouncingObstacle":
                 self.obstacles.add(BouncingObstacle(self.map, obstacle["position"], 20, obstacle["velocity"], obstacle["direction"]))
