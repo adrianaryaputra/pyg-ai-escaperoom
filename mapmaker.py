@@ -1,3 +1,5 @@
+from multiprocessing.pool import ThreadPool
+import os
 import pygame
 
 from src.game.button import Button
@@ -9,12 +11,13 @@ from src.game.level import Level
 def main():
     pygame.init()
     SCREEN_WIDTH, SCREEN_HEIGHT = 960, 600
-    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+    screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.DOUBLEBUF)
     pygame.display.set_caption("Map Maker")
     FPS = 60
     clock = pygame.time.Clock()
 
     level = Level(screen)
+    pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP, pygame.MOUSEBUTTONDOWN, pygame.MOUSEBUTTONUP])
 
     buttons = pygame.sprite.Group()
     buttons.add(Button(screen, (10, 10), (150, 40), "Load Map", level.dataLoad))
@@ -30,44 +33,36 @@ def main():
     buttons.add(Button(screen, (810, 10), (140, 40), "Clear Obs", level.obstacles.empty))
     buttons.add(Button(screen, (810, 60), (140, 40), "Clear Map", level.map.clear))
 
-    # Add Surrounding Wall
-    # for i in range(16):
-    #     level.map.blocks[i].onMouseDown()
-    #     level.map.blocks[-i-1].onMouseDown()
-    # for i in range(1, 25):
-    #     level.map.blocks[i*16].onMouseDown()
-    #     level.map.blocks[(i+1)*16-1].onMouseDown()
+    pool = ThreadPool(os.cpu_count())
 
-    while True:
+    while 1:
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                pool.close()
                 pygame.quit()
 
-            level.map.handleEvent(event)
-            level.player.handleEvent(event)
-            for obstacle in level.obstacles:
-                obstacle.handleEvent(event)
-            for button in buttons:
-                button.handleEvent(event)
+            pool.apply(level.map.handleEvent, (event,))
+            pool.apply(level.player.handleEvent, (event,))
+            pool.map(lambda o: o.handleEvent(event), level.obstacles)
+            pool.map(lambda b: b.handleEvent(event), buttons)
 
         screen.fill(COLOR.BG)
 
-        level.map.draw()
-        level.map.update()
+        pool.apply(level.map.update, ())
+        pool.apply(level.player.update, ())
 
-        level.player.draw()
-        level.player.update()
+        pool.apply(level.map.draw, ())
+        pool.apply(level.player.draw, ())
 
         if level.FLAG_isPlaying and level.player.checkCollisions(level.getObstacleCollisionRects()):
             break
 
+        pool.map(lambda o: o.update(), level.obstacles)
+        pool.map(lambda o: o.draw(), level.obstacles)
 
-        for obstacle in level.obstacles:
-            obstacle.draw()
-            obstacle.update()
-
-        buttons.draw(screen)
-        buttons.update()
+        pool.apply(buttons.draw, (screen,))
+        pool.apply(buttons.update, ())
 
         pygame.display.update()
         clock.tick(FPS)

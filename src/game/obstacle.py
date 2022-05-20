@@ -1,4 +1,7 @@
+import itertools
 import math
+from multiprocessing.pool import ThreadPool
+import os
 import pygame
 
 from .colorscheme import COLOR
@@ -102,14 +105,15 @@ class RotatingObstacle(pygame.sprite.Sprite):
 
         self.subelem = []
 
-        for defaultAngle in [0, 90, 180, 270]:
-            for defaultDistance in [2*size, 4*size]:
-                self.subelem.append(self.createSubElement(size, defaultDistance, defaultAngle))
-        self.subelem.append(self.createSubElement(size, 0, 0))
+        pool = ThreadPool(processes=os.cpu_count())
+        subpar = list(itertools.product([size], [2*size, 4*size], [0, 90, 180, 270]))
+        pool.map(self.createSubElement, subpar)
+        self.createSubElement((size, 0, 0))
         self.draw()
 
 
-    def createSubElement(self, size, distance, angle):
+    def createSubElement(self, sda):
+        size, distance, angle = sda
         si = pygame.Surface(size=(size, size))
         si.fill(COLOR.BG)
         si.set_colorkey(COLOR.BG)
@@ -119,7 +123,7 @@ class RotatingObstacle(pygame.sprite.Sprite):
             centerx=self.rect.centerx + sd[0], 
             centery=self.rect.centery + sd[1],
         )
-        return (si, sr, distance, angle)
+        self.subelem.append((si, sr, distance, angle))
 
 
     def calculateRelativePosition(self, distance, angle):
@@ -176,7 +180,6 @@ class RotatingObstacle(pygame.sprite.Sprite):
 
     def getRelativePosition(self, position):
         rp = (position[0] - self.parent.rect.left, position[1] - self.parent.rect.top)
-        print(self.rect.center, position, rp)
         return rp
 
 
