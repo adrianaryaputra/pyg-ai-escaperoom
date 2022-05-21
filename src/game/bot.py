@@ -1,4 +1,3 @@
-from turtle import goto
 import pygame
 import numpy as np
 import math
@@ -197,7 +196,14 @@ class Population():
             if self.individuals[n].is_alive:
                 return False
         return True
-        
+
+    def fitnessProbability(self) -> tuple[list[float], float]:
+        fitnessSum = 0
+        fitnessVal = []
+        for n in range(self.num_individual):
+            fitnessSum += self.individuals[n].fitness
+            fitnessVal.append(self.individuals[n].fitness)
+        return fitnessVal, fitnessSum
 
 
 class xxxIndividual(pygame.sprite.Sprite):
@@ -214,8 +220,8 @@ class xxxIndividual(pygame.sprite.Sprite):
         self.rect = self.image.get_rect(center=position)
         self.image.fill(COLOR.PLAYER)
         self.is_alive = True
-        self.fitness = 0
-        self.step = 0
+        self.fitness = float(0)
+        self.step = int(0)
 
     def calculateFitness(self, finish_point: tuple[int, int]) -> None:
         diff = ((self.rect.centerx - finish_point[0]), (self.rect.centery - finish_point[1]))
