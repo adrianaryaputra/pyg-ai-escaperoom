@@ -17,10 +17,15 @@ class PSOwithDEAP:
         # test
 
 
-    def setup_creator(self):
-        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-        creator.create("Particle", list, fitness=creator.FitnessMax, speed=list, 
-                       smin=None, smax=None, best=None)
+    def setup_creator(self, minimize=True):
+        if minimize:
+            creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
+            creator.create("Particle", list, fitness=creator.FitnessMin, speed=list, 
+                smin=None, smax=None, best=None)
+        else:
+            creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+            creator.create("Particle", list, fitness=creator.FitnessMax, speed=list, 
+                smin=None, smax=None, best=None)
 
     def setup_toolbox(self, eval_func, particle_size=2, psmaxmin=[-6, 6, -3, 3], phi1=2.0, phi2=2.0):
         self.particle_size = particle_size
