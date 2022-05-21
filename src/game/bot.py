@@ -49,6 +49,8 @@ class Individual(pygame.sprite.Sprite):
         self.FLAG_alive = True
 
     def update(self):
+        if not self.FLAG_alive:
+            return
         if self.instructions is not None:
             if len(self.instructions.directions) > self.instructions.step:
                 instruction = self.instructions.directions[self.instructions.step]
@@ -129,6 +131,10 @@ class Individual(pygame.sprite.Sprite):
         rect = self.parent.rect.copy()
         rect.move_ip(-self.parent.rect.left, -self.parent.rect.top)
         
+        # Check if player touch the edge -> Die
+        if not rect.collidepoint(self.rect.topleft) or not rect.collidepoint(self.rect.bottomright):
+            self.FLAG_alive = False
+
         # peg player inside map surface
         self.rect.clamp_ip(rect)
 
