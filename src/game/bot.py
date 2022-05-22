@@ -5,7 +5,7 @@ import math
 from .colorscheme import COLOR
 
 
-class Instructions:
+class Instructions:  # ----- WILL BE REMOVED -----
     def __init__(self, size: int, max_speed: int = 5) -> None:
         self.size = size
         self.max_speed = max_speed
@@ -27,7 +27,7 @@ class Instructions:
         self.directions = self.directions.astype(int)
 
 
-class Individual(pygame.sprite.Sprite):
+class Individual(pygame.sprite.Sprite):  # ----- WILL BE REMOVED -----
     def __init__(self, parent: pygame.sprite.Sprite, position, size, speed, instructions: Instructions = None):
         super().__init__()
         self.parent = parent
@@ -168,20 +168,27 @@ class xxxIndividual(pygame.sprite.Sprite):
         self.is_alive = True
         self.fitness = float(0)
         self.step = int(0)
-        self.last_update = True
+        # self.last_update = True
 
     def calculateFitness(self, finish_point: tuple[int, int]) -> None:
         diff = ((self.rect.centerx - finish_point[0]), (self.rect.centery - finish_point[1]))
         eucdistance = math.sqrt(diff[0]**2 + diff[1]**2)
-        self.fitness = 1.0 / (eucdistance**2)
+        try:
+            self.fitness = 1.0 / (eucdistance**2)
+            # clip fitness to 999
+            self.fitness = 999 if self.fitness > 999 else self.fitness
+        except ZeroDivisionError:
+            # catch zero division error
+            self.fitness = 1000
 
     def update(self, level):
         if not self.is_alive:
-            if not self.last_update:
-                return
-            else:
-                self.velocity = np.array([0, 0])
-                self.last_update = False
+            return
+            # if not self.last_update:
+            #     return
+            # else:
+            #     self.velocity = np.array([0, 0])
+            #     self.last_update = False
         if len(self.instructions) > self.step:
             self.velocity += self.instructions[self.step]
             self.velocity = np.clip(self.velocity, 
@@ -240,11 +247,11 @@ class xxxIndividual(pygame.sprite.Sprite):
         # check collision with obstacles
         if self.checkCollisions(level.getObstacleCollisionRects()):
             self.is_alive = False
-            self.last_update = False
+            # self.last_update = False
 
 class Population():
     def __init__(self, num_individual: int, max_speed: int = 3, individual_type: pygame.sprite.Sprite = xxxIndividual ) -> None:
-        self.initial_position = (150, 220)
+        self.initial_position = (150, 240)  # start position(150, 240) finish position(630, 240)
         self.num_instruction = 100
         self.num_individual = num_individual
         self.max_speed = max_speed

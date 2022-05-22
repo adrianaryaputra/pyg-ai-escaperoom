@@ -1,4 +1,5 @@
 import pygame
+import numpy as np
 
 from src.game.button import Button
 from src.game.colorscheme import COLOR
@@ -11,7 +12,7 @@ from src.game.bot import Population
 def main():
     pygame.init()
     SCREEN_WIDTH, SCREEN_HEIGHT = 800, 600
-    NUM_POPULATION = 100
+    NUM_POPULATION = 10
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Hardest Game Ever")
     FPS = 60
@@ -37,6 +38,18 @@ def main():
             # level.player.handleEvent(event)
             for obstacle in level.obstacles:
                 obstacle.handleEvent(event)
+
+        if population.allDead():
+            # TODO: add heuristics
+            population.updateFitness((630, 240))
+            fitnessVal, fitnessSum = population.fitnessProbability()
+            sort_index = np.argsort(np.array(fitnessVal))
+            # print(sort_index)
+            # TEST: Show the best fitness
+            population.individuals[sort_index[-1]].image.fill((255, 0, 0))
+            population.individuals[sort_index[-2]].image.fill((255, 127, 0))
+            population.individuals[sort_index[-3]].image.fill((255, 255, 0))
+
 
         screen.fill(COLOR.BG)
 
