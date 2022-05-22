@@ -13,7 +13,6 @@ class Instructions:
         self.directions = np.zeros((self.size, 2))
         # self._randomize()
         self._randomangle()
-        # print(self.directions)
 
     def _randomize(self, seed: int = None) -> None:
         if seed is not None:
@@ -153,10 +152,99 @@ class Individual(pygame.sprite.Sprite):
             elif block[1].width < block[1].height:
                 self.rect.left = block[0].rect.right
 
+class xxxIndividual(pygame.sprite.Sprite):
+    def __init__(self, position: tuple[int, int], size: int, instructions, max_speed: int) -> None:
+        super().__init__()
+        # self.position = position
+        self.size = size
+        self.velocity = np.array((0, 0))
+        self.instructions = instructions
+        self.max_speed = max_speed
+        # create an object for representing image
+        self.image = pygame.Surface(size=(size, size))
+        # set the location of the object
+        self.rect = self.image.get_rect(center=position)
+        self.image.fill(COLOR.PLAYER)
+        self.is_alive = True
+        self.fitness = float(0)
+        self.step = int(0)
+        self.last_update = True
+
+    def calculateFitness(self, finish_point: tuple[int, int]) -> None:
+        diff = ((self.rect.centerx - finish_point[0]), (self.rect.centery - finish_point[1]))
+        eucdistance = math.sqrt(diff[0]**2 + diff[1]**2)
+        self.fitness = 1.0 / (eucdistance**2)
+
+    def update(self, level):
+        if not self.is_alive:
+            if not self.last_update:
+                return
+            else:
+                self.velocity = np.array([0, 0])
+                self.last_update = False
+        if len(self.instructions) > self.step:
+            self.velocity += self.instructions[self.step]
+            self.velocity = np.clip(self.velocity, 
+                np.ones(self.velocity.shape)*-self.max_speed, 
+                np.ones(self.velocity.shape)*self.max_speed)
+            self.step += 1
+        else:
+            self.velocity = np.array([0, 0])
+        # self.position += self.velocity
+        self.rect.move_ip(self.velocity)
+        self.collisionHandler(level)
+
+    def draw(self, level):
+        level.map.image.blit(self.image, self.rect)
+
+    def checkCollisions(self, objList):
+        # check collision with all objects
+        collisionListID = self.rect.collidelistall(objList)
+
+        # if collision with object
+        if len(collisionListID) > 0:
+            return True
+        return False
+
+    def collisionHandler(self, level):
+        # transform parent rect to relative coordinate
+        rect = level.map.rect.copy()
+        rect.move_ip(-level.map.rect.left, -level.map.rect.top)
+        
+        # Check if player touch the edge -> Die
+        if not rect.collidepoint(self.rect.topleft) or not rect.collidepoint(self.rect.bottomright):
+            self.is_alive = False
+
+        # peg player inside map surface
+        self.rect.clamp_ip(rect)
+
+        # check collision with all blocks
+        collidableBlock = [block for block in level.map.blocks if block.collidable]
+        collisionListID = self.rect.collidelistall(collidableBlock)
+        collisionList = [collidableBlock[i] for i in collisionListID]
+        collisionClip = [self.rect.clip(coll) for coll in collisionList]
+
+        if len(collisionListID) > 0:
+            self.is_alive = False
+
+        for block in zip(collisionList, collisionClip):
+            if block[0].rect.x == block[1].x and block[1].width < block[1].height:
+                self.rect.right = block[0].rect.left
+            elif block[0].rect.y == block[1].y and block[1].width > block[1].height:
+                self.rect.bottom = block[0].rect.top
+            elif block[1].width > block[1].height:
+                self.rect.top = block[0].rect.bottom
+            elif block[1].width < block[1].height:
+                self.rect.left = block[0].rect.right
+
+        # check collision with obstacles
+        if self.checkCollisions(level.getObstacleCollisionRects()):
+            self.is_alive = False
+            self.last_update = False
 
 class Population():
-    def __init__(self, num_individual: int, max_speed: int = 5, individual_type: pygame.sprite.Sprite = Individual ) -> None:
-        self.initial_position = (400, 300)
+    def __init__(self, num_individual: int, max_speed: int = 3, individual_type: pygame.sprite.Sprite = xxxIndividual ) -> None:
+        self.initial_position = (150, 220)
         self.num_instruction = 100
         self.num_individual = num_individual
         self.max_speed = max_speed
@@ -164,12 +252,12 @@ class Population():
         self.steps = np.zeros(num_individual)
         self.individuals = []
         for n in range(self.num_individual):
-            self.individuals.append(xxxIndividual(self.initial_position, 20, self.instructions[n], self.max_speed))
+            self.individuals.append(individual_type(self.initial_position, 20, self.instructions[n], self.max_speed))
 
     def _createInstructions(self):
         instructions = []
         for n in range(self.num_instruction):
-            instructions.append(self._randomAngle)
+            instructions.append(self._randomAngle())
         return np.array(instructions)
 
     def _randomAngle(self, seed: int = None):
@@ -204,70 +292,3 @@ class Population():
             fitnessSum += self.individuals[n].fitness
             fitnessVal.append(self.individuals[n].fitness)
         return fitnessVal, fitnessSum
-
-
-class xxxIndividual(pygame.sprite.Sprite):
-    def __init__(self, position: tuple[int, int], size: int, instructions, max_speed: int) -> None:
-        super().__init__()
-        # self.position = position
-        self.size = size
-        self.velocity = np.array((0, 0))
-        self.instructions = instructions
-        self.max_speed = max_speed
-        # create an object for representing image
-        self.image = pygame.Surface(size=(size, size))
-        # set the location of the object
-        self.rect = self.image.get_rect(center=position)
-        self.image.fill(COLOR.PLAYER)
-        self.is_alive = True
-        self.fitness = float(0)
-        self.step = int(0)
-
-    def calculateFitness(self, finish_point: tuple[int, int]) -> None:
-        diff = ((self.rect.centerx - finish_point[0]), (self.rect.centery - finish_point[1]))
-        eucdistance = math.sqrt(diff[0]**2 + diff[1]**2)
-        self.fitness = 1.0 / (eucdistance**2)
-
-    def update(self, parent):
-        if not self.is_alive:
-            return
-        if len(self.instructions) > self.step:
-            self.velocity += self.instructions[self.step]
-            self.velocity.clip(-self.max_speed, self.max_speed)
-            self.step += 1
-        else:
-            self.velocity = np.array([0, 0])
-        # self.position += self.velocity
-        self.rect.move_ip(self.velocity)
-        self.collisionHandler(parent)
-
-    def draw(self, parent):
-        parent.image.blit(self.image, self.rect)
-
-    def collisionHandler(self, parent):
-        # transform parent rect to relative coordinate
-        rect = parent.rect.copy()
-        rect.move_ip(-parent.rect.left, -parent.rect.top)
-        
-        # Check if player touch the edge -> Die
-        if not rect.collidepoint(self.rect.topleft) or not rect.collidepoint(self.rect.bottomright):
-            self.is_alive = False
-
-        # peg player inside map surface
-        self.rect.clamp_ip(rect)
-
-        # check collision with all blocks
-        collidableBlock = [block for block in parent.blocks if block.collidable]
-        collisionListID = self.rect.collidelistall(collidableBlock)
-        collisionList = [collidableBlock[i] for i in collisionListID]
-        collisionClip = [self.rect.clip(coll) for coll in collisionList]
-
-        for block in zip(collisionList, collisionClip):
-            if block[0].rect.x == block[1].x and block[1].width < block[1].height:
-                self.rect.right = block[0].rect.left
-            elif block[0].rect.y == block[1].y and block[1].width > block[1].height:
-                self.rect.bottom = block[0].rect.top
-            elif block[1].width > block[1].height:
-                self.rect.top = block[0].rect.bottom
-            elif block[1].width < block[1].height:
-                self.rect.left = block[0].rect.right
