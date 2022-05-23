@@ -21,7 +21,7 @@ def main():
     # - buat elapse time?
     # - tampilkan generasi NN
     
-    level.dataLoad("./src/level/level_1.map")
+    level.dataLoad("./src/level/level_2.map")
     level.playObstacles()
 
     while True:
@@ -43,7 +43,7 @@ def main():
         level.player.update()
 
         if level.FLAG_isPlaying and level.player.checkCollisions(level.getObstacleCollisionRects()):
-            level.dataLoad("./src/level/level_1.map")
+            level.dataLoad("./src/level/level_2.map")
             level.playObstacles()
 
         for obstacle in level.obstacles:

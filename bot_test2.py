@@ -19,6 +19,7 @@ def main():
     clock = pygame.time.Clock()
     level = Level(screen)
     population = Population(NUM_POPULATION, 5)
+
     level.dataLoad("./src/level/level_1.map")
     level.playObstacles()
 
@@ -44,7 +45,13 @@ def main():
             population.updateFitness((630, 240))
             fitnessVal, fitnessSum = population.fitnessProbability()
             sort_index = np.argsort(np.array(fitnessVal))
-            # print(sort_index)
+            # new_instructions = ga.update(fitnessVal, fitnessSum, population.instructions)
+            # population.updateInstructions(new_instruction)
+            
+            # level.dataLoad("./src/level/level_2.map")
+            # level.playObstacles()
+
+
             # TEST: Show the best fitness
             population.individuals[sort_index[-1]].image.fill((255, 0, 0))
             population.individuals[sort_index[-2]].image.fill((255, 127, 0))
