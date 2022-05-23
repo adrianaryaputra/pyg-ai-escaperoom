@@ -1,7 +1,6 @@
 import pygame, easygui, pickle
 
 from .player import Player
-from .bot import Individual, Instructions
 from .obstacle import BouncingObstacle, RotatingObstacle
 from .map import Map
 
@@ -14,10 +13,6 @@ class Level:
         self.map = Map(screen, (10, 110), (26, 16), 30)
         if n_bot is None:
             self.player = Player(self.map, (400, 300), 20, 5)
-        else:
-            self.population = []
-            for i in range(n_bot):
-                self.population.append(Individual(self.map, (400, 300), 20, 5, Instructions(200, max_speed=3)))
         self.obstacles = pygame.sprite.Group()
 
 
