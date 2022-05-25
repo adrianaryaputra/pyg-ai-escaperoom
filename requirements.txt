@@ -1,3 +1,4 @@
-pygame
-easygui
-deap
+deap==1.0.1
+easygui==0.98.3
+numpy==1.22.4
+pygame==2.1.2
