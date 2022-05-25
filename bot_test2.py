@@ -18,6 +18,7 @@ def main():
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Hardest Game Ever")
     FPS = 60
+    FLAG_FAST_TRAINING = True
     clock = pygame.time.Clock()
     level = Level(screen)
     population = Population(NUM_POPULATION, 5)
@@ -111,7 +112,8 @@ def main():
             obstacle.update()
 
         pygame.display.update()
-        clock.tick(FPS)
+        if not FLAG_FAST_TRAINING:
+            clock.tick(FPS)
 
 
 
