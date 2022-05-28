@@ -56,6 +56,7 @@ class xxxIndividual(pygame.sprite.Sprite):
         self.collisionHandler(level)
 
     def draw(self, level):
+        pygame.draw.rect(self.image, (255,255,255), self.image.get_rect(), 3)
         level.map.image.blit(self.image, self.rect)
 
     def checkCollisions(self, objList):

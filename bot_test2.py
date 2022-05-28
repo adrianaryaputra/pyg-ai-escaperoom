@@ -18,7 +18,7 @@ def main():
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     pygame.display.set_caption("Hardest Game Ever")
     FPS = 60
-    FLAG_FAST_TRAINING = True
+    FLAG_FAST_TRAINING = False
     clock = pygame.time.Clock()
     level = Level(screen)
     population = Population(NUM_POPULATION, 5)
@@ -42,9 +42,6 @@ def main():
                 pygame.quit()
 
             level.map.handleEvent(event)
-            # for individual in population.individuals:
-            #     individual.handleEvent(event)
-            # level.player.handleEvent(event)
             for obstacle in level.obstacles:
                 obstacle.handleEvent(event)
 
